@@ -28,18 +28,18 @@ For more information, please refer to [http://unlicense.org]
 */
 
     define ("SOL_IP", 0);
-    define ("IP_TTL", 2);    // On OSX, use '4' instead of '2'.
+    define ("IP_TTL", 2);    // On OSX, use '4' instead of '2'
     
     echo"\n ============================ PHP-Traceroute ============================\n\n";
     
     if (!isset($argv[1]) || $argv[1] == "-h" || $argv[1] == "--help") {
         // Show the helppage
-        echo "   Usage: sudo php ".$argv[0]." [args] host\n\n";
+        echo "   Usage: php ".$argv[0]." [args] host\n\n";
         echo "   The available args are:\n";
         echo "       -h, --help    Show this Help\n";
         echo "       -g            Show GeoIP lookup for the hosts\n";
         echo "\n";
-        echo "   Example: sudo php ".$argv[0]." -g github.com\n";
+        echo "   Example: php ".$argv[0]." -g github.com\n";
         
         echo "\n =======================================================================\n\n";
         exit;
@@ -75,15 +75,16 @@ For more information, please refer to [http://unlicense.org]
     $ttl = 1;
     while ($ttl < $maximum_hops) {
         // Create ICMP and UDP sockets
-        $recv_socket = socket_create (AF_INET, SOCK_RAW, getprotobyname ('icmp'));
+        $recv_socket = socket_create (AF_INET, SOCK_DGRAM, getprotobyname ('udp'));
         $send_socket = socket_create (AF_INET, SOCK_DGRAM, getprotobyname ('udp'));
 
         // Set TTL to current lifetime
         socket_set_option ($send_socket, SOL_IP, IP_TTL, $ttl);
-
+        socket_set_option ($send_socket, SOL_IP, IP_RECVERR, 1);
+        
         // Bind receiving ICMP socket to default IP (no port needed since it's ICMP)
-        socket_bind ($recv_socket, 0, 0);
-
+        socket_bind ($recv_socket, 0, $port);
+        
         // Save the current time for roundtrip calculation
         $t1 = microtime (true);
 
@@ -99,7 +100,7 @@ For more information, please refer to [http://unlicense.org]
         // Nothing to read, which means a timeout has occurred.
         if (count ($r)) {
             // Receive data from socket (and fetch destination address from where this data was found)
-            socket_recvfrom ($recv_socket, $buf, 512, 0, $recv_addr, $recv_port);
+            socket_recvfrom ($recv_socket, $buf, 512, 0, $dest_addr, $port);
 
             // Calculate the roundtrip time
             $roundtrip_time = ( microtime(true) - $t1 ) * 1000;
@@ -110,7 +111,7 @@ For more information, please refer to [http://unlicense.org]
                 $recv_name = "*";
             } else {
                 // Otherwise, fetch the hostname and geoinfo for the address found
-                $recv_name = gethostbyaddr ($recv_addr);
+                $recv_name = gethostbyaddr ($dest_addr);
                 if ($argv[1] == "-g") {
                     $recv_geo = ip2geo ($recv_addr);
                 }
