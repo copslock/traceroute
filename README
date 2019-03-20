@@ -1,4 +1,7 @@
-A simple traceroute example in PHP. 
 
-Original by Joshua Thijssen (jaytaph)
-Edited by Igor Scheller (MyIgel)
+PHP tracepath that not require root privileges 
+------
+How to get back TTL-exceeded error messages from UDP packets in C on Linux without root privledges?
+<https://stackoverflow.com/questions/32380821/how-to-get-back-ttl-exceeded-error-messages-from-udp-packets-in-c-on-linux-witho/>
+
+Original by Igor Scheller (MyIgel)
